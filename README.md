@@ -10,7 +10,7 @@ Join to our group at [Discord](https://discord.gg/WfxZAVg)
 
 <table>
 <tr><td>Ticker</td><td>QOINZ</td></tr>
-<tr><td>Consensus algorithm</td><td>POS</td></tr>
+<tr><td>Consensus algorithm</td><td>POS / MASTERNODE</td></tr>
 <tr><td>Premine</td><td>420,000</td></tr>
 <tr><td>Blocktime average</td><td>60 sec</td></tr>
 <tr><td>Transaction confirmations</td><td>10</td></tr>
