@@ -1,0 +1,384 @@
+// Copyright (c) 2010 Satoshi Nakamoto
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2015-2019 The PIVX developers
+// Copyright (c) 2019 The QOINZ Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include "chainparams.h"
+#include "random.h"
+#include "util.h"
+#include "utilstrencodings.h"
+
+#include <assert.h>
+#include <limits>
+
+#include <boost/assign/list_of.hpp>
+
+using namespace std;
+using namespace boost::assign;
+
+struct SeedSpec6 {
+    uint8_t addr[16];
+    uint16_t port;
+};
+
+#include "chainparamsseeds.h"
+
+/**
+ * Main network
+ */
+
+//! Convert the pnSeeds6 array into usable address objects.
+static void convertSeed6(std::vector<CAddress>& vSeedsOut, const SeedSpec6* data, unsigned int count)
+{
+    // It'll only connect to one or two seed nodes because once it connects,
+    // it'll get a pile of addresses with newer timestamps.
+    // Seed nodes are given a random 'last seen time' of between one and two
+    // weeks ago.
+    const int64_t nOneWeek = 7 * 24 * 60 * 60;
+    for (unsigned int i = 0; i < count; i++) {
+        struct in6_addr ip;
+        memcpy(&ip, data[i].addr, sizeof(ip));
+        CAddress addr(CService(ip, data[i].port));
+        addr.nTime = GetTime() - GetRand(nOneWeek) - nOneWeek;
+        vSeedsOut.push_back(addr);
+    }
+}
+
+//   What makes a good checkpoint block?
+// + Is surrounded by blocks with reasonable timestamps
+//   (no blocks before with a timestamp after, none after with
+//    timestamp before)
+// + Contains no strange transactions
+static Checkpoints::MapCheckpoints mapCheckpoints =
+    boost::assign::map_list_of
+        (0, uint256("00005ff6967314bf65170c6d238225ec0df1b0cc4fe144f705af5657757b8be8"))
+
+    ;
+
+static const Checkpoints::CCheckpointData data = {
+    &mapCheckpoints,
+    1573819200, // * UNIX timestamp of last checkpoint block
+    0,     // * total number of transactions between genesis and last checkpoint
+				//   (the tx=... number in the SetBestChain debug.log lines)
+    5		// * estimated number of transactions per day after checkpoint
+};
+
+static Checkpoints::MapCheckpoints mapCheckpointsTestnet = boost::assign::map_list_of(0, uint256("0x001"));
+static const Checkpoints::CCheckpointData dataTestnet = {&mapCheckpointsTestnet, 1573408800, 0, 250};
+
+static Checkpoints::MapCheckpoints mapCheckpointsRegtest = boost::assign::map_list_of(0, uint256("0x001"));
+static const Checkpoints::CCheckpointData dataRegtest = {&mapCheckpointsRegtest, 1573408800, 0, 0};
+
+class CMainParams : public CChainParams
+{
+public:
+    CMainParams()
+    {
+        networkID = CBaseChainParams::MAIN;
+        strNetworkID = "main";
+        /**
+         * The message start string is designed to be unlikely to occur in normal data.
+         * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
+         * a large 4-byte int at any alignment.
+         */
+        pchMessageStart[0] = 0xb1;
+        pchMessageStart[1] = 0x85;
+        pchMessageStart[2] = 0xc2;
+        pchMessageStart[3] = 0x9c;
+
+        nDefaultPort = 11148;
+        bnProofOfWorkLimit = ~uint256(0) >> 20;
+        bnStartWork = ~uint256(0) >> 24;
+
+        nMaxReorganizationDepth = 100;
+        nEnforceBlockUpgradeMajority = 750;
+        nRejectBlockOutdatedMajority = 950;
+        nToCheckBlockUpgradeMajority = 1000;
+        nMinerThreads = 0;
+        nTargetSpacing = 120;  // 2 minute
+        nTargetSpacingSlowLaunch = 2 * 60; // before block 100
+        nPoSTargetSpacing = 60;  // 60 sec // 1 minute
+        nMaturity = 60;
+        nMasternodeCountDrift = 3;
+        nMaxMoneyOut = 21000000 * COIN;
+        nStartMasternodePaymentsBlock = 2000;
+
+        /** Height or Time Based Activations **/
+        nLastPOWBlock = 2000;
+        nModifierUpdateBlock = std::numeric_limits<decltype(nModifierUpdateBlock)>::max();
+
+        const char* pszTimestamp = "Monday, January 20, 2020 @ QOINZ PoS / Masternode v2";
+        CMutableTransaction txNew;
+        txNew.vin.resize(1);
+        txNew.vout.resize(1);
+        txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+        txNew.vout[0].nValue = 0 * COIN;
+        txNew.vout[0].scriptPubKey = CScript() << ParseHex("04aac63134eaaeac2c9403c6b0077910e1b1697c11041d364b670e055d1d0cb52f3997f5c643fb6dfc6cdda288918c68c39cd177557446a0e1466b7c66b28016e5") << OP_CHECKSIG;
+        txNew.blob = "Genesis Tx";
+        genesis.vtx.push_back(txNew);
+        genesis.hashPrevBlock = 0;
+        genesis.hashMerkleRoot = genesis.BuildMerkleTree();
+        genesis.nVersion = 1;
+        genesis.nTime = 1579521600; // Monday, January 20, 2020 12:00:00 GMT+00:00
+        genesis.nBits = 504365040;
+        genesis.nNonce = 0x1a4de1; // 1723873
+
+        hashGenesisBlock = genesis.GetHash();
+	//	printf("%s\n", hashGenesisBlock.ToString().c_str()); 
+        assert(genesis.hashMerkleRoot == uint256("f2c27cc89bfa6c233bb399c1544545d7855d5d1b5698a82c82afdce07fcfcaa8"));
+        assert(hashGenesisBlock == uint256("e6f268fc45a5aee4ba219df51c8bb3429b83547073e0dd1306a7f4014f8c8c87"));
+
+        vSeeds.push_back(CDNSSeedData("", "144.76.63.215"));   // seed01.qoinz.network
+
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 58 ); // Q
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 121); // q or r
+        base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 204);
+        base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
+        // 	BIP44 coin type is from https://github.com/satoshilabs/slips/blob/master/slip-0044.md
+        base58Prefixes[EXT_COIN_TYPE] = boost::assign::list_of(0x80)(0x00)(0x03)(0x97).convert_to_container<std::vector<unsigned char> >(); // 919
+
+        convertSeed6(vFixedSeeds, pnSeed6_main, ARRAYLEN(pnSeed6_main));
+		
+        // vFixedSeeds.clear();
+        // vSeeds.clear();
+
+        fRequireRPCPassword = true;
+        fMiningRequiresPeers = true;
+        fDefaultConsistencyChecks = false;
+        fRequireStandard = true;
+        fMineBlocksOnDemand = false;
+        fSkipProofOfWorkCheck = true;
+        fTestnetToBeDeprecatedFieldRPC = false;
+        fHeadersFirstSyncingActive = false;
+
+        nPoolMaxTransactions = 3;
+		
+        nStakeInputMin = 100 * COIN;
+        strDevFeeAddress = "QWPRwg3evipz8UbSAscLJSLprFbmiMvVb8";
+
+        vAlertPubKey = ParseHex("0409939ed8a3744404a1c83e7cc8101df70f14a0458086842cfefc8f56fe2da0cdfa8278804aa75184bcd1b92c6aa7017b21237f89eac924eea4da7f833df0ff29");
+        vGMPubKey = ParseHex("049fafc4798655f6e1e9cfe967336c20abf130701061c821938e83f397321bba236e21061b90a39191e9658f0b5dc4b3ef0cdc358f1efe9f30177ea233ef29fb33");
+        strSporkKey = "046df6937129fd21ff1d095a7f58d79570f9109fb53076af8be50ddd69299995ddcfec70b697d88379e1ec15465c7cd6c41c896b9bd7fc7b8c9e556fc3403015d5";
+        strObfuscationPoolDummyAddress = "QjWvfKLwVdcTs4siZ5j3TGLiNMDFn7pmhV";
+    }
+
+    const Checkpoints::CCheckpointData& Checkpoints() const
+    {
+        return data;
+    }
+};
+static CMainParams mainParams;
+
+/**
+ * Testnet (v3)
+ */
+class CTestNetParams : public CMainParams
+{
+public:
+    CTestNetParams()
+    {
+        networkID = CBaseChainParams::TESTNET;
+        strNetworkID = "test";
+        pchMessageStart[0] = 0xc8;
+        pchMessageStart[1] = 0x81;
+        pchMessageStart[2] = 0xc5;
+        pchMessageStart[3] = 0x91;
+
+        bnProofOfWorkLimit = ~uint256(0) >> 1;
+        bnStartWork = bnProofOfWorkLimit;
+
+        nDefaultPort = 21148;
+        nEnforceBlockUpgradeMajority = 51;
+        nRejectBlockOutdatedMajority = 75;
+        nToCheckBlockUpgradeMajority = 100;
+        nMinerThreads = 0;
+        nTargetSpacing = 1 * 60;  // 1 minute
+        nLastPOWBlock = std::numeric_limits<decltype(nLastPOWBlock)>::max();
+        nMaturity = 30;
+        nMasternodeCountDrift = 4;
+        nModifierUpdateBlock = std::numeric_limits<decltype(nModifierUpdateBlock)>::max();
+        nMaxMoneyOut = 42000000 * COIN;
+
+        //! Modify the testnet genesis block so the timestamp is valid for a later start.
+        genesis.nTime = 1573408800; // Sunday, November 10, 2019 18:00:00 GMT
+        genesis.nNonce = 0;
+
+        hashGenesisBlock = genesis.GetHash();
+
+        // assert(hashGenesisBlock == uint256("0000ff606ac169abcfc04716ede96d545f75c4c2e388f5eb678684c0a42821b4"));
+
+        vFixedSeeds.clear();
+        vSeeds.clear();
+
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 80);   // Testnet QOINZ addresses start with 'Z'
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 137);  // Testnet QOINZ script addresses start with 'x'
+        base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 144);       // Testnet private keys start with 'z or 2'
+        base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x3a)(0x80)(0x61)(0xa0).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x3a)(0x80)(0x58)(0x37).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_COIN_TYPE] = boost::assign::list_of(0x80)(0x00)(0x00)(0x01).convert_to_container<std::vector<unsigned char> >();
+
+        //convertSeed6(vFixedSeeds, pnSeed6_test, ARRAYLEN(pnSeed6_test));
+
+        fRequireRPCPassword = true;
+        fMiningRequiresPeers = false;
+        fDefaultConsistencyChecks = false;
+        fRequireStandard = false;
+        fMineBlocksOnDemand = false;
+        fTestnetToBeDeprecatedFieldRPC = true;
+
+        nPoolMaxTransactions = 2;
+
+        nStakeInputMin = 100 * COIN;
+        strDevFeeAddress = "ZDevf8YQKsZXopRnL7uhp2V3KoipBsGXGc";
+
+        vAlertPubKey = ParseHex("0457b6153a48470690a8b6fcc65bd0a8fcf20ed962823a1e1933d1aebc103afa8556533b36f78c187fdcd9119866f8a2321ed080b9411a5859fd953969f2d12349");
+        vGMPubKey = ParseHex("04e4b4e6ae7324050eae20e07f479a0f29dd0ff2db70d3afd7e01181c8974b01a841727467931db464d703d2754ba41f0a166068e3d7328fcbf06bd5a311ed6d46");
+        strSporkKey = "04eff02776c60cadf194e284de3bf0a24e0c3315fe64a6cc5ecc4ff20d5bd24eeb6e4f33a18c21679df1facfcceaf4aabb9b3951627773b74d600f2e5f125dfada";
+        strObfuscationPoolDummyAddress = "ZFqnZG5XVmzyjzX8VhL1NdQHUjTY6J3eJD";
+
+    }
+    const Checkpoints::CCheckpointData& Checkpoints() const
+    {
+        return dataTestnet;
+    }
+};
+static CTestNetParams testNetParams;
+
+/**
+ * Regression test
+ */
+class CRegTestParams : public CTestNetParams
+{
+public:
+    CRegTestParams()
+    {
+        networkID = CBaseChainParams::REGTEST;
+        strNetworkID = "regtest";
+        pchMessageStart[0] = 0x99;
+        pchMessageStart[1] = 0xc1;
+        pchMessageStart[2] = 0xcb;
+        pchMessageStart[3] = 0xc9;
+
+        bnStartWork = ~uint256(0) >> 20;
+
+        nEnforceBlockUpgradeMajority = 750;
+        nRejectBlockOutdatedMajority = 950;
+        nToCheckBlockUpgradeMajority = 1000;
+        nMinerThreads = 1;
+        nTargetSpacing = 1 * 60;
+        bnProofOfWorkLimit = ~uint256(0) >> 1;
+        genesis.nTime = 1573408800; // Sunday, November 10, 2019 18:00:00 GMT
+        genesis.nBits = 0x207fffff;
+        genesis.nNonce = 1;
+
+        hashGenesisBlock = genesis.GetHash();
+        nDefaultPort = 51148;
+
+        //assert(hashGenesisBlock == uint256("0000f8c0de4a6cc76ca58c50b5f232590b90278a4e6b06f3232e8dedc3b45be7"));
+
+        vFixedSeeds.clear(); //! Testnet mode doesn't have any fixed seeds.
+        vSeeds.clear();      //! Testnet mode doesn't have any DNS seeds.
+
+        fRequireRPCPassword = false;
+        fMiningRequiresPeers = false;
+        fDefaultConsistencyChecks = true;
+        fRequireStandard = false;
+        fMineBlocksOnDemand = true;
+        fTestnetToBeDeprecatedFieldRPC = false;
+    }
+    const Checkpoints::CCheckpointData& Checkpoints() const
+    {
+        return dataRegtest;
+    }
+};
+static CRegTestParams regTestParams;
+
+/**
+ * Unit test
+ */
+class CUnitTestParams : public CMainParams, public CModifiableParams
+{
+public:
+    CUnitTestParams()
+    {
+        networkID = CBaseChainParams::UNITTEST;
+        strNetworkID = "unittest";
+        nDefaultPort = 51478;
+        vFixedSeeds.clear(); //! Unit test mode doesn't have any fixed seeds.
+        vSeeds.clear();      //! Unit test mode doesn't have any DNS seeds.
+
+        fRequireRPCPassword = false;
+        fMiningRequiresPeers = false;
+        fDefaultConsistencyChecks = true;
+        fMineBlocksOnDemand = true;
+
+
+    }
+
+    const Checkpoints::CCheckpointData& Checkpoints() const
+    {
+        // UnitTest share the same checkpoints as MAIN
+        return data;
+    }
+
+    //! Published setters to allow changing values in unit test cases
+    virtual void setEnforceBlockUpgradeMajority(int anEnforceBlockUpgradeMajority) { nEnforceBlockUpgradeMajority = anEnforceBlockUpgradeMajority; }
+    virtual void setRejectBlockOutdatedMajority(int anRejectBlockOutdatedMajority) { nRejectBlockOutdatedMajority = anRejectBlockOutdatedMajority; }
+    virtual void setToCheckBlockUpgradeMajority(int anToCheckBlockUpgradeMajority) { nToCheckBlockUpgradeMajority = anToCheckBlockUpgradeMajority; }
+    virtual void setDefaultConsistencyChecks(bool afDefaultConsistencyChecks) { fDefaultConsistencyChecks = afDefaultConsistencyChecks; }
+    virtual void setSkipProofOfWorkCheck(bool afSkipProofOfWorkCheck) { fSkipProofOfWorkCheck = afSkipProofOfWorkCheck; }
+};
+static CUnitTestParams unitTestParams;
+
+
+static CChainParams* pCurrentParams = 0;
+
+CModifiableParams* ModifiableParams()
+{
+    assert(pCurrentParams);
+    assert(pCurrentParams == &unitTestParams);
+    return (CModifiableParams*)&unitTestParams;
+}
+
+const CChainParams& Params()
+{
+    assert(pCurrentParams);
+    return *pCurrentParams;
+}
+
+CChainParams& Params(CBaseChainParams::Network network)
+{
+    switch (network) {
+    case CBaseChainParams::MAIN:
+        return mainParams;
+    case CBaseChainParams::TESTNET:
+        return testNetParams;
+    case CBaseChainParams::REGTEST:
+        return regTestParams;
+    case CBaseChainParams::UNITTEST:
+        return unitTestParams;
+    default:
+        assert(false && "Unimplemented network");
+        return mainParams;
+    }
+}
+
+void SelectParams(CBaseChainParams::Network network)
+{
+    SelectBaseParams(network);
+    pCurrentParams = &Params(network);
+}
+
+bool SelectParamsFromCommandLine()
+{
+    CBaseChainParams::Network network = NetworkIdFromCommandLine();
+    if (network == CBaseChainParams::MAX_NETWORK_TYPES)
+        return false;
+
+    SelectParams(network);
+    return true;
+}
