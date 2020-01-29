@@ -1,0 +1,26 @@
+# /etc/conf.d/qoinzd: config file for /etc/init.d/qoinzd
+
+# Config file location
+#BITCOIND_CONFIGFILE="/etc/qoinz/qoinz.conf"
+
+# What directory to write pidfile to?  (created and owned by $BITCOIND_USER)
+#BITCOIND_PIDDIR="/var/run/qoinzd"
+
+# What filename to give the pidfile
+#BITCOIND_PIDFILE="${BITCOIND_PIDDIR}/qoinzd.pid"
+
+# Where to write qoinzd data (be mindful that the blockchain is large)
+#BITCOIND_DATADIR="/var/lib/qoinzd"
+
+# User and group to own qoinzd process
+#BITCOIND_USER="qoinz"
+#BITCOIND_GROUP="qoinz"
+
+# Path to qoinzd executable
+#BITCOIND_BIN="/usr/bin/qoinzd"
+
+# Nice value to run qoinzd under
+#BITCOIND_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+BITCOIND_OPTS=""

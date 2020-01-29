@@ -1,0 +1,26 @@
+[Unit]
+Description=qoinz's distributed currency daemon
+After=network.target
+
+[Service]
+User=qoinz
+Group=qoinz
+
+Type=forking
+PIDFile=/var/lib/qoinzd/qoinzd.pid
+
+ExecStart=/usr/bin/qoinzd -daemon -pid=/var/lib/qoinzd/qoinzd.pid \
+          -conf=/etc/qoinz/qoinz.conf -datadir=/var/lib/qoinzd
+
+ExecStop=-/usr/bin/qoinz-cli -conf=/etc/qoinz/qoinz.conf \
+         -datadir=/var/lib/qoinzd stop
+
+Restart=always
+PrivateTmp=true
+TimeoutStopSec=60s
+TimeoutStartSec=2s
+StartLimitInterval=120s
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target
